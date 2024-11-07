@@ -1,0 +1,53 @@
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Azure;
+using Azure.AI.Translation.Text;
+using Newtonsoft.Json;
+
+class Program
+{
+    private static readonly string endpoint = "<seu-endpoint>";
+    private static readonly string apiKey = "<sua-chave-de-api>";
+    private static readonly string region = "<sua-regiao>";
+
+    static async Task Main(string[] args)
+    {
+        string textToTranslate = "Este é um exemplo de texto para tradução.";
+        string targetLanguage = "en"; // Código do idioma de destino (por exemplo, "en" para inglês)
+
+        var translatedText = await TranslateTextAsync(textToTranslate, targetLanguage);
+
+        Console.WriteLine("Texto Original:");
+        Console.WriteLine(textToTranslate);
+        Console.WriteLine("\nTexto Traduzido:");
+        Console.WriteLine(translatedText);
+    }
+
+    private static async Task<string> TranslateTextAsync(string text, string targetLanguage)
+    {
+        var credential = new AzureKeyCredential(apiKey);
+        var client = new TextTranslationClient(new Uri(endpoint), credential);
+
+        var requestBody = new object[] { new { Text = text } };
+        var requestBodyJson = JsonConvert.SerializeObject(requestBody);
+
+        using var httpClient = new HttpClient();
+        using var request = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri($"{endpoint}/translate?api-version=3.0&to={targetLanguage}"),
+            Content = new StringContent(requestBodyJson, Encoding.UTF8, "application/json")
+        };
+
+        request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
+        request.Headers.Add("Ocp-Apim-Subscription-Region", region);
+
+        var response = await httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        var translations = JsonConvert.DeserializeObject<dynamic>(responseBody);
+        return translations[0].translations[0].text;
+    }
+}
