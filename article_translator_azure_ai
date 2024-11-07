@@ -7,13 +7,13 @@ using HtmlAgilityPack;
 
 class Program
 {
-    private static readonly string endpoint = "<seu-endpoint>";
-    private static readonly string apiKey = "<sua-chave-de-api>";
-    private static readonly string region = "<sua-regiao>";
+    private static readonly string endpoint = "";
+    private static readonly string apiKey = "";
+    private static readonly string region = "";
 
     static async Task Main(string[] args)
     {
-        var url = "https://example.com/artigo-tecnico"; // URL da página web
+        var url = ""; // URL da página web
         var htmlContent = await GetHtmlContentAsync(url);
         var textContent = ExtractTextFromHtml(htmlContent);
 
