@@ -2,13 +2,14 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Azure;
-using Azure.AI.OpenAI;
+using Azure.AI.Translation.Text;
 using HtmlAgilityPack;
 
 class Program
 {
     private static readonly string endpoint = "<seu-endpoint>";
     private static readonly string apiKey = "<sua-chave-de-api>";
+    private static readonly string region = "<sua-regiao>";
 
     static async Task Main(string[] args)
     {
@@ -16,7 +17,7 @@ class Program
         var htmlContent = await GetHtmlContentAsync(url);
         var textContent = ExtractTextFromHtml(htmlContent);
 
-        var translatedText = await TranslateTextAsync(textContent, "en"); // Traduzir para inglês
+        var translatedText = await TranslateTextAsync(textContent, "pt-br"); // Traduzir para português
 
         Console.WriteLine("Texto Original:");
         Console.WriteLine(textContent);
@@ -40,18 +41,12 @@ class Program
 
     private static async Task<string> TranslateTextAsync(string text, string targetLanguage)
     {
-        var client = new OpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-        var chatClient = client.GetChatClient("gpt-35-turbo");
+        var credential = new AzureKeyCredential(apiKey);
+        var client = new TextTranslationClient(new Uri(endpoint), credential);
 
-        var messages = new[]
-        {
-            new ChatMessage(ChatRole.System, "You are a translator."),
-            new ChatMessage(ChatRole.User, $"Translate the following text to {targetLanguage}: {text}")
-        };
+        var response = await client.TranslateAsync(targetLanguage, text);
+        var translations = response.Value;
 
-        var response = await chatClient.GetChatCompletionsAsync(messages);
-        var translatedText = response.Value.Choices[0].Message.Content;
-
-        return translatedText;
+        return translations[0].Translations[0].Text;
     }
 }
